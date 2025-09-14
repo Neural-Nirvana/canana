@@ -1,127 +1,138 @@
-# 🎨 Canana - Visual Prompting for Nano Banana & SOTA AI Models
+# 🎨 Canana - Visual Prompting Canvas for Nano Banana AI
 
-**The Revolutionary AI-Powered Digital Canvas for Visual Prompting**
+**The Revolutionary Digital Canvas for Advanced Visual Prompting with Google's Nano Banana**
 
-Canana transforms how you interact with state-of-the-art image generation models through intuitive visual prompting. Draw, annotate, and guide AI models like Google's Nano Banana with unprecedented precision and control.
+Canana transforms how you interact with Google's state-of-the-art Nano Banana (Gemini 2.5 Flash Image Preview) through intuitive visual prompting. Draw, annotate, and guide AI with arrows, text, and canvas-based instructions for unprecedented precision and control.
 
 ![Canana Interface](https://img.shields.io/badge/Status-Production%20Ready-brightgreen) ![AI Models](https://img.shields.io/badge/AI-Nano%20Banana-blue) ![License](https://img.shields.io/badge/License-MIT-green)
 
 ---
 
-## ✨ **What is Visual Prompting?**
+## ✨ **What is Visual Prompting with Nano Banana?**
 
-Visual prompting is the next evolution in AI interaction. Instead of relying solely on text descriptions, Canana enables you to:
+Visual prompting represents the cutting-edge evolution of AI interaction, moving beyond simple text descriptions to sophisticated canvas-based instruction systems. Canana enables you to:
 
-- **Draw directly on canvas** to show AI exactly what you want
-- **Add arrows and annotations** to guide AI transformations
-- **Combine sketches with instructions** for precise control
-- **Iterate visually** rather than through text refinements
+- **Draw directly on canvas** with arrows, circles, and annotations that Nano Banana understands
+- **Combine visual cues with natural language** for precise editing control
+- **Use multi-turn conversational editing** to refine images iteratively
+- **Maintain character consistency** across multiple transformations
+- **Blend multiple images** with contextual understanding
 
-This approach is particularly powerful with advanced models like **Google's Nano Banana (Gemini 2.5 Flash Image Preview)** and other SOTA (State-of-the-Art) vision-language models that can understand complex visual instructions.
+This approach leverages **Google's Nano Banana** (officially Gemini 2.5 Flash Image Preview), the world's top-rated image editing model that excels at understanding visual instructions, maintaining lighting consistency, and performing targeted transformations while preserving everything else intact.
 
 ---
 
-## 🚀 **Key Features**
+## 🧠 **Powered by Nano Banana: Google's SOTA Image AI**
 
-### 🎯 **Advanced Visual Prompting**
-- **Multi-modal Input**: Combine drawings, text, arrows, and images
-- **Instruction Layering**: Add visual cues that AI understands but excludes from output
-- **Context-Aware Generation**: AI interprets your canvas holistically
-- **Precision Control**: Guide specific transformations with visual annotations
+### **What Makes Nano Banana Revolutionary**
+
+Nano Banana isn't just another text-to-image tool—it's a **prompt-driven photo editor** that provides Photoshop-like control through simple visual instructions:
+
+- **Targeted Editing**: Edit only what you specify while keeping everything else intact—lighting, perspective, textures, even facial features
+- **Character Consistency**: Maintains subject appearance across multiple images for rich storytelling
+- **Multi-Image Fusion**: Understands and merges multiple input images with contextual awareness
+- **Real-Time Performance**: Often responds in 1-2 seconds, feeling like real-time editing
+- **SynthID Watermarking**: Built-in digital watermarking for AI-generated content
+
+### **Technical Specifications**
+- **Model**: `gemini-2.5-flash-image-preview`
+- **Performance**: Top-rated on LMArena benchmarks
+- **Pricing**: $0.039 per image (1290 output tokens)
+- **Speed**: 1-2 second response times
+- **Availability**: Gemini API, Google AI Studio, Vertex AI
+
+---
+
+## 🚀 **Advanced Visual Prompting Features**
+
+### 🎯 **Canvas-Based Instruction System**
+- **Arrow Annotations**: Direct Nano Banana's attention to specific areas
+- **Bounding Box Markup**: Mark regions with rectangles, ellipses, and shapes  
+- **Textual Overlays**: Add natural language instructions directly on canvas
+- **Multi-Layer Annotations**: Combine visual cues for complex edits
+- **Instruction Exclusion**: AI automatically removes instruction markup from final output
 
 ### 🎨 **Professional Canvas Tools**
-- **Drawing Tools**: Brushes, shapes, text, and freehand drawing
-- **Image Import**: Drag & drop images from anywhere
-- **Multi-workspace**: Organize projects across multiple canvases
-- **Export System**: Save your creations in multiple formats
+- **Precision Drawing**: Brushes, shapes, and freehand tools optimized for AI instruction
+- **Smart Import System**: Drag & drop images with automatic canvas integration
+- **Multi-Workspace**: Organize complex projects across multiple canvases
+- **Zoom-Aware Export**: Export only the current viewport area at any zoom level
 
-### ⚙️ **Customizable AI Engine**
-- **Prompt Templates**: Pre-built prompts for different artistic styles
-  - 🎨 Sketch Enhancement
-  - 📸 Photorealistic Conversion
-  - 🌈 Digital Art Transformation
-  - ✏️ Instruction Following
-- **Custom Prompts**: Write and save your own AI instructions
-- **Processing Pipeline**: Multi-stage generation with visual feedback
+### ⚙️ **Nano Banana Optimization Engine**
+- **Prompt Templates**: Pre-optimized prompts for different editing scenarios:
+  - 📸 **Photorealistic Enhancement**: "A photorealistic [shot type] of [subject], [action], set in [environment]. The scene is illuminated by [lighting], creating a [mood] atmosphere"
+  - 🎨 **Style Transfer**: Blend multiple images while maintaining composition
+  - ✏️ **Targeted Editing**: Remove, add, or modify specific elements
+  - 🌈 **Creative Transformation**: Artistic interpretation with consistent lighting
+- **Multi-Turn Editing**: Iterative refinement through conversational prompting
+- **Context Preservation**: Maintains scene coherence across multiple edits
 
-### 🔒 **Privacy & Security**
-- **Local Storage**: All data stays on your device
-- **Secure API**: Your API keys are stored locally and encrypted
-- **No Data Sharing**: Zero third-party data transmission
-
----
-
-## 🧠 **Supported AI Models**
-
-### **Primary Integration: Nano Banana (Gemini 2.5 Flash Image Preview)**
-Canana is optimized for Google's Nano Banana model (gemini-2.5-flash-image-preview), which excels at:
-- **Visual Understanding**: Interprets complex canvas layouts
-- **Instruction Following**: Understands arrows, text, and visual cues
-- **Context Awareness**: Maintains consistency across elements
-- **High-Quality Output**: Generates professional-grade results
-
-### **Future Model Support**
-Canana's architecture is designed to support additional SOTA models:
-- **DALL-E 3** integration planned
-- **Midjourney API** compatibility layer
-- **Stable Diffusion** variants
-- **Other Google AI models** as they become available
+### 🔒 **Privacy & Performance**
+- **Local Processing**: All canvas data processed locally
+- **Encrypted API Storage**: Secure API key management
+- **Optimized Requests**: Smart batching and compression for Nano Banana API
+- **Real-Time Feedback**: Live processing status with stage-by-stage updates
 
 ---
 
 ## 🎭 **Visual Prompting Workflows**
 
-### **1. Sketch Enhancement**
+### **1. Targeted Object Editing**
 ```
 Your Workflow:
-1. Draw a rough sketch on canvas
-2. Add text annotations describing desired style
-3. Use arrows to highlight key areas for enhancement
-4. AI generates polished, professional artwork
+1. Import or create base image on canvas
+2. Draw arrow pointing to object to modify
+3. Add text annotation: "Change this car to red sports car"
+4. Nano Banana edits only the specified object
+5. Download result with perfect lighting consistency
 
-Perfect for: Concept art, character design, architectural sketches
+Perfect for: Product mockups, object replacement, color changes
 ```
 
-### **2. Photo-realistic Transformation**
-```
-Your Workflow:
-1. Import reference images or create base composition
-2. Add lighting direction arrows
-3. Annotate material properties (metal, glass, fabric)
-4. AI creates photorealistic version with proper lighting
-
-Perfect for: Product mockups, realistic renderings, photo editing
-```
-
-### **3. Style Transfer & Artistic Interpretation**
+### **2. Compositional Transformation**
 ```
 Your Workflow:
-1. Upload source image or create base artwork
-2. Add style reference images
-3. Use text annotations to specify artistic style
-4. AI blends styles while maintaining composition
+1. Upload reference image to canvas
+2. Use bounding boxes to mark areas for change
+3. Add directional arrows for lighting/perspective
+4. Annotate with scene description changes
+5. Generate transformed composition
 
-Perfect for: Digital art, style exploration, artistic experimentation
+Perfect for: Background replacement, scene enhancement, artistic interpretation
 ```
 
-### **4. Iterative Design Process**
+### **3. Character Consistency Workflow**
 ```
 Your Workflow:
-1. Start with basic composition
-2. Generate first iteration with AI
-3. Add annotations for improvements
-4. Iterate until perfect result achieved
+1. Create character in first canvas
+2. Use arrows to highlight key facial features
+3. Annotate desired pose/expression changes
+4. Generate variations maintaining character likeness
+5. Build consistent character library
 
-Perfect for: Logo design, UI mockups, creative iteration
+Perfect for: Storytelling, comic creation, brand mascots
+```
+
+### **4. Multi-Image Fusion**
+```
+Your Workflow:
+1. Import multiple source images
+2. Use annotations to specify which elements to combine
+3. Add arrows showing desired composition layout
+4. Nano Banana intelligently blends with proper lighting
+5. Refine through multi-turn editing
+
+Perfect for: Collages, concept visualization, creative compositing
 ```
 
 ---
 
-## 🛠 **Quick Start**
+## 🛠 **Quick Start with Nano Banana**
 
 ### **Prerequisites**
 - Node.js 16+ and npm
 - Google Gemini API key ([Get one here](https://makersuite.google.com/app/apikey))
+- Modern browser with canvas support
 
 ### **Installation & Setup**
 ```bash
@@ -138,182 +149,203 @@ npm start
 # Open http://localhost:3000 in your browser
 ```
 
-### **First Time Setup**
-1. Click the **✨ AI Magic** button in the dock
-2. Enter your Google Gemini API key
-3. Start creating with visual prompting!
+### **First Visual Prompting Session**
+1. Click the **✨ AI Magic** button (rainbow gradient in dock)
+2. Enter your Google Gemini API key in secure panel
+3. Draw or import an image on canvas
+4. Add arrows and text annotations for editing instructions
+5. Click generate and watch Nano Banana work its magic!
 
 ---
 
-## 📖 **How to Use Canana**
+## 💡 **Pro Tips for Nano Banana Visual Prompting**
 
-### **Basic Workflow**
-1. **Create or open workspace** using the workspace tabs
-2. **Draw, sketch, or import images** using canvas tools
-3. **Add visual instructions** with arrows and text
-4. **Click ✨ AI Magic** to generate enhanced version
-5. **Download results** via right-click context menu
-
-### **Canvas Tools**
-- **👆 Select Tool (V)**: Move and resize objects
-- **🖌️ Brush Tool (B)**: Freehand drawing with customizable size/color
-- **📝 Text Tool (T)**: Add text annotations and instructions
-- **⬜ Shape Tools**: Rectangles (R) and circles (C) for layouts
-- **📤 Import**: Upload images via button or drag & drop
-
-### **Advanced Features**
-- **⚙️ Settings Panel**: Customize AI behavior and prompts
-- **🔄 Undo/Redo (⌘Z/⌘⇧Z)**: Non-destructive editing
-- **🔍 Zoom Controls (⌘+/⌘-/⌘0)**: Precise canvas navigation
-- **💾 Export (⌘S)**: Save your artwork in high quality
-
----
-
-## 💡 **Pro Tips for Visual Prompting**
-
-### **Effective Arrow Usage**
+### **Arrow Annotation Best Practices**
 ```
-✅ DO: Use arrows to indicate transformation direction
-✅ DO: Point to specific areas needing attention
-✅ DO: Show lighting direction or focal points
-❌ DON'T: Overuse arrows - they clutter the canvas
+✅ DO: Point arrows at specific objects or areas to edit
+✅ DO: Use arrows to indicate lighting direction changes
+✅ DO: Combine arrows with descriptive text for clarity
+❌ DON'T: Overuse arrows - Nano Banana understands context
 ```
 
-### **Text Annotation Best Practices**
+### **Prompt Engineering for Visual Instructions**
 ```
-✅ DO: Use clear, specific descriptions
-✅ DO: Mention desired materials, styles, lighting
-✅ DO: Include mood and atmosphere keywords
-❌ DON'T: Write novels - keep instructions concise
+✅ DO: Write descriptive paragraphs, not keyword lists
+✅ DO: Be specific about edits: "make background a neon diner at night"
+✅ DO: Use multi-turn editing - change one thing at a time
+❌ DON'T: Try to change everything in a single prompt
 ```
 
-### **Composition Guidelines**
+### **Canvas Composition Guidelines**
 ```
-✅ DO: Leave some negative space for AI processing
-✅ DO: Use contrasting colors for instructions vs content
-✅ DO: Group related annotations together
-❌ DON'T: Overcrowd the canvas with instructions
+✅ DO: Use contrasting colors for instruction markup
+✅ DO: Leave space around objects for context understanding
+✅ DO: Group related annotations logically
+❌ DON'T: Overcrowd the canvas with competing instructions
+```
+
+### **Lighting and Consistency Tips**
+```
+✅ DO: Trust Nano Banana's lighting consistency algorithms
+✅ DO: Use arrows to indicate desired light source direction
+✅ DO: Annotate material properties for realistic rendering
+❌ DON'T: Over-specify technical details - describe naturally
 ```
 
 ---
 
-## 🎯 **Advanced Capabilities**
+## 🌟 **Advanced Nano Banana Capabilities**
 
-### **Multi-Stage Generation**
-Canana provides visual feedback during AI processing:
-- 🎨 **Preparing**: Canvas analysis and preprocessing
-- 🧠 **Processing**: Sending to AI model
-- ✨ **Generating**: AI creating enhanced version
-- 🎉 **Complete**: Final result ready
+### **Real-Time Processing Feedback**
+Canana provides live visual feedback during Nano Banana processing:
+- 🎨 **Preparing**: Canvas analysis and instruction parsing
+- 📤 **Uploading**: Secure API communication with compression
+- 🧠 **Processing**: Nano Banana model inference
+- ✨ **Generating**: Image synthesis and editing
+- 🎉 **Complete**: Final result with instruction markup removed
 
 ### **Smart Output Processing**
-AI automatically optimizes results:
-- Removes instruction arrows and text
-- Crops to natural content boundaries
-- Maintains proper aspect ratios
-- Ensures visual consistency and lighting
+Nano Banana + Canana automatically optimizes results:
+- **Instruction Removal**: Automatically excludes arrows, text, and UI elements
+- **Intelligent Cropping**: Crops to natural content boundaries
+- **Lighting Harmonization**: Ensures consistent lighting across all elements
+- **Perspective Correction**: Maintains proper spatial relationships
 
-### **Workspace Management**
-- **Multiple Projects**: Switch between different canvases
-- **Auto-save**: All work automatically preserved
-- **Thumbnails**: Visual previews of each workspace
-- **Export Options**: Save individual projects or collections
+### **Multi-Workspace Project Management**
+- **Canvas Collections**: Organize related visual prompting sessions
+- **Auto-Save**: All work automatically preserved with thumbnails
+- **Export Options**: Download individual results or project collections
+- **Version History**: Track iterative improvements through visual prompting
 
 ---
 
-## 🌟 **Use Cases & Applications**
+## 🎯 **Professional Use Cases**
 
 ### **Creative Professionals**
-- **Concept Artists**: Rapid ideation and refinement
-- **UI/UX Designers**: Mockup enhancement and iteration
-- **Illustrators**: Style exploration and technique learning
-- **Photographers**: Creative editing and manipulation
+- **Concept Artists**: Rapid ideation with consistent character development
+- **UI/UX Designers**: Interface mockup enhancement and A/B testing
+- **Product Designers**: Photorealistic product visualization with lighting control
+- **Photographers**: Advanced photo editing with natural language instructions
 
-### **Content Creators**
-- **Social Media**: Eye-catching visuals and graphics
-- **Marketing**: Professional imagery and brand assets
-- **Education**: Visual aids and instructional materials
-- **Entertainment**: Character design and world building
+### **Content Creators & Marketers**
+- **Social Media**: Eye-catching visuals with brand consistency
+- **Advertising**: Campaign assets with targeted messaging
+- **E-commerce**: Product photography enhancement and variant generation
+- **Brand Development**: Logo iterations and visual identity exploration
 
 ### **Developers & Teams**
-- **Prototyping**: Quick visual mockups and wireframes
-- **Documentation**: Enhanced technical diagrams
-- **Presentations**: Professional-quality visuals
-- **Brainstorming**: Visual idea development
+- **Prototyping**: Visual mockups with annotation-driven refinement
+- **Documentation**: Technical diagrams with professional enhancement
+- **Presentations**: Slide graphics with consistent visual themes
+- **User Research**: Visual concepts for user testing and feedback
 
 ---
 
 ## 🔧 **Technical Architecture**
 
 ### **Frontend Stack**
-- **React 18**: Modern UI with hooks and concurrent features
-- **Fabric.js**: Professional canvas manipulation
-- **CSS3**: Advanced animations and glass morphism effects
+- **React 18**: Modern UI with hooks and concurrent rendering
+- **Fabric.js**: Professional canvas manipulation and event handling
+- **CSS3**: Glass morphism effects and smooth animations
 
-### **AI Integration**
-- **Google GenAI SDK**: Official Gemini API integration
-- **Streaming Responses**: Real-time generation feedback
-- **Error Handling**: Robust retry and fallback systems
+### **Nano Banana Integration**
+- **Google GenAI SDK**: Official Gemini 2.5 Flash Image Preview API
+- **Streaming Processing**: Real-time generation status updates  
+- **Intelligent Compression**: Optimized base64 encoding for API efficiency
+- **Error Handling**: Robust retry logic and graceful degradation
 
-### **Storage & Performance**
-- **localStorage**: Client-side persistence
-- **Image Optimization**: Automatic compression and resizing
-- **Lazy Loading**: Performance-optimized rendering
+### **Performance Optimization**
+- **Local Canvas Processing**: Client-side image manipulation
+- **Smart Caching**: Efficient workspace and result storage
+- **Lazy Loading**: Performance-optimized rendering for large projects
+- **Memory Management**: Automatic cleanup for long editing sessions
 
 ---
 
-## 🤝 **Contributing**
+## 🤝 **Contributing to Canana**
 
-We welcome contributions to make Canana even better!
+Help us advance visual prompting technology for Nano Banana and future AI models!
 
-### **Development Setup**
+### **Development Priorities**
+- **Enhanced Annotation Tools**: More sophisticated visual instruction methods
+- **Batch Processing**: Multiple canvas processing with Nano Banana
+- **Export Formats**: Additional output options for professional workflows
+- **Accessibility**: Improved tools for users with disabilities
+
+### **Setup for Contributors**
 ```bash
-# Fork the repository
-# Clone your fork
+# Fork and clone the repository
 git clone https://github.com/your-username/canana.git
 
 # Create feature branch
-git checkout -b feature/amazing-new-feature
+git checkout -b feature/visual-prompting-enhancement
 
-# Make changes and commit
-git commit -m "Add amazing new feature"
+# Install development dependencies
+npm install
 
-# Push and create pull request
-git push origin feature/amazing-new-feature
+# Run development server with hot reload
+npm start
+
+# Run tests and linting
+npm test && npm run lint
 ```
-
-### **Areas for Contribution**
-- **New AI Model Integrations**: Add support for additional models
-- **Canvas Tools**: Enhanced drawing and editing capabilities
-- **Export Options**: Additional file formats and sharing
-- **UI/UX Improvements**: Better accessibility and usability
 
 ---
 
-## 📄 **License**
+## 📊 **Nano Banana Model Information**
 
-MIT License - see [LICENSE](LICENSE) file for details.
+### **Model Capabilities**
+- **Visual Understanding**: Interprets complex visual instructions and annotations
+- **Instruction Following**: Processes arrows, shapes, and textual overlays
+- **Context Preservation**: Maintains scene consistency across edits
+- **Multi-Modal Input**: Combines text, images, and visual annotations
+- **Real-Time Performance**: Industry-leading response times for interactive editing
+
+### **Supported Visual Prompt Types**
+- Rectangle and ellipse bounding boxes
+- Directional arrows and pointing indicators  
+- Freehand scribbles and masks created with Bézier curves
+- Text annotations and natural language overlays
+- Multi-image composition instructions
+
+### **Quality Assurance**
+- **Top-Rated Performance**: #1 on LMArena benchmarks
+- **Consistent Output**: Reliable lighting, shadows, and color temperature
+- **Professional Quality**: Suitable for commercial and creative applications
+- **SynthID Integration**: Built-in AI content identification
+
+---
+
+## 📄 **License & Legal**
+
+MIT License - see [LICENSE](LICENSE) file for full terms.
+
+**Note**: Usage of Google's Nano Banana model is subject to Google's AI terms of service. Canana is an independent interface tool and is not officially affiliated with Google.
 
 ---
 
 ## 🙏 **Acknowledgments**
 
-- **Google AI**: For the powerful Gemini models
-- **Fabric.js Team**: For the excellent canvas library
-- **React Community**: For the robust frontend framework
-- **Open Source Contributors**: For inspiration and code examples
+- **Google DeepMind**: For the revolutionary Nano Banana model
+- **Visual Prompting Research Community**: For advancing annotation-based AI interaction
+- **Fabric.js Team**: For the robust canvas manipulation library
+- **React Community**: For the powerful frontend framework
+- **Open Source Contributors**: For continuous improvement and feedback
 
 ---
 
 ## 📞 **Support & Resources**
 
 - **Issues**: [GitHub Issues](https://github.com/your-username/canana/issues)
-- **Documentation**: [Wiki](https://github.com/your-username/canana/wiki)
+- **Documentation**: [Wiki](https://github.com/your-username/canana/wiki) 
 - **Discussions**: [GitHub Discussions](https://github.com/your-username/canana/discussions)
 - **API Keys**: [Google AI Studio](https://makersuite.google.com/app/apikey)
+- **Nano Banana Documentation**: [Google AI Developer Docs](https://ai.google.dev/gemini-api/docs/image-generation)
 
 ---
 
-**Made with ❤️ for the future of AI-human creative collaboration**
+**Built for the Future of Visual AI Interaction**
 
-*Canana - Where Visual Meets Artificial Intelligence*
+*Canana - Where Visual Prompting Meets Nano Banana's Intelligence*
+
+Transform your creative workflow with the world's most advanced visual prompting canvas, optimized for Google's state-of-the-art Nano Banana AI model.
