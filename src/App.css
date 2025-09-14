@@ -160,3 +160,117 @@ body {
 .close-panel:hover {
   color: #000;
 }
+
+/* Workspace Management */
+.workspace-tabs {
+  position: fixed;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  padding: 8px;
+  background: rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 12px;
+  z-index: 998;
+}
+
+.workspace-tab {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.workspace-tab:hover {
+  background: white;
+  transform: scale(1.05);
+}
+
+.workspace-tab.active {
+  background: #4CAF50;
+  color: white;
+}
+
+.workspace-tab-close {
+  margin-left: 4px;
+  opacity: 0.6;
+  cursor: pointer;
+}
+
+.workspace-tab-close:hover {
+  opacity: 1;
+}
+
+.workspace-new {
+  padding: 6px 12px;
+  background: rgba(76, 175, 80, 0.8);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.workspace-new:hover {
+  background: #4CAF50;
+  transform: scale(1.05);
+}
+
+.workspace-panel {
+  position: fixed;
+  top: 60px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  z-index: 999;
+  width: 250px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.workspace-list-item {
+  padding: 8px;
+  margin: 4px 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.workspace-list-item:hover {
+  background: #f5f5f5;
+  transform: translateX(4px);
+}
+
+.workspace-list-item.active {
+  background: #e8f5e9;
+  border-color: #4CAF50;
+  font-weight: 600;
+}
+
+.workspace-thumbnail {
+  width: 40px;
+  height: 30px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  object-fit: cover;
+}

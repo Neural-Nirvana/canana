@@ -1,11 +1,16 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { fabric } from 'fabric';
+import WorkspaceManager from './WorkspaceManager';
+import WorkspaceTabs from './WorkspaceTabs';
+import AIService from './AIService';
 import './App.css';
 
 function App() {
   const canvasRef = useRef(null);
   const fabricCanvasRef = useRef(null);
   const fileInputRef = useRef(null);
+  const workspaceManagerRef = useRef(null);
+  
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(5);
   const [brushColor, setBrushColor] = useState('#000000');
@@ -17,9 +22,36 @@ function App() {
   const [showBrushPanel, setShowBrushPanel] = useState(false);
   const [showShapePanel, setShowShapePanel] = useState(false);
   const [showHelp, setShowHelp] = useState(false);
+  const [showWorkspacePanel, setShowWorkspacePanel] = useState(false);
   const [zoom, setZoom] = useState(1);
+  
+  // AI generation state
+  const [isAIGenerating, setIsAIGenerating] = useState(false);
+  const [showAIPanel, setShowAIPanel] = useState(false);
+  const [aiApiKey, setAiApiKey] = useState('');
+  const [aiService, setAiService] = useState(null);
+  
+  // Context menu state
+  const [contextMenu, setContextMenu] = useState(null);
+  const [selectedObject, setSelectedObject] = useState(null);
+  
+  // Workspace state
+  const [workspaces, setWorkspaces] = useState([]);
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState(null);
 
+  // Initialize workspace manager
   useEffect(() => {
+    if (!workspaceManagerRef.current) {
+      workspaceManagerRef.current = new WorkspaceManager();
+      setWorkspaces(workspaceManagerRef.current.getAllWorkspaces());
+      setCurrentWorkspaceId(workspaceManagerRef.current.currentWorkspaceId);
+    }
+  }, []);
+
+  // Initialize canvas (only once)
+  useEffect(() => {
+    if (!canvasRef.current || fabricCanvasRef.current) return;
+    
     // Create Fabric.js canvas - full screen with space for dock
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: window.innerWidth - 40,
@@ -28,6 +60,36 @@ function App() {
     });
 
     fabricCanvasRef.current = canvas;
+
+    // Auto-save workspace on changes
+    const saveWorkspace = () => {
+      if (workspaceManagerRef.current && currentWorkspaceId) {
+        const canvasData = canvas.toJSON();
+        const thumbnail = canvas.toDataURL({
+          format: 'png',
+          quality: 0.3,
+          multiplier: 0.1
+        });
+        workspaceManagerRef.current.updateWorkspaceData(canvasData, thumbnail);
+      }
+    };
+
+    // Save on canvas modifications
+    canvas.on('object:added', saveWorkspace);
+    canvas.on('object:modified', saveWorkspace);
+    canvas.on('object:removed', saveWorkspace);
+
+    // Store canvas reference for use in React event handlers
+    fabricCanvasRef.current = canvas;
+
+    // Close context menu when clicking outside
+    const handleOutsideClick = (e) => {
+      if (contextMenu) {
+        setContextMenu(null);
+      }
+    };
+
+    document.addEventListener('click', handleOutsideClick);
 
     // Handle window resize
     const handleResize = () => {
@@ -42,9 +104,34 @@ function App() {
     // Clean up
     return () => {
       window.removeEventListener('resize', handleResize);
+      document.removeEventListener('click', handleOutsideClick);
+      canvas.off('object:added', saveWorkspace);
+      canvas.off('object:modified', saveWorkspace);
+      canvas.off('object:removed', saveWorkspace);
+      
+      
       canvas.dispose();
+      fabricCanvasRef.current = null;
     };
   }, []);
+
+  // Load workspace data when currentWorkspaceId changes
+  useEffect(() => {
+    if (!fabricCanvasRef.current || !workspaceManagerRef.current || !currentWorkspaceId) return;
+    
+    const canvas = fabricCanvasRef.current;
+    const workspace = workspaceManagerRef.current.getCurrentWorkspace();
+    
+    if (workspace && workspace.data) {
+      canvas.loadFromJSON(workspace.data, () => {
+        canvas.renderAll();
+      });
+    } else {
+      canvas.clear();
+      canvas.backgroundColor = '#ffffff';
+      canvas.renderAll();
+    }
+  }, [currentWorkspaceId]);
 
   // Keyboard shortcuts
   useEffect(() => {
@@ -125,10 +212,18 @@ function App() {
             e.preventDefault();
             setShowHelp(!showHelp);
             break;
+          case 'n':
+            e.preventDefault();
+            handleNewWorkspace();
+            break;
           case 'escape':
             e.preventDefault();
             canvas.discardActiveObject();
             canvas.renderAll();
+            setShowWorkspacePanel(false);
+            setShowHelp(false);
+            setShowBrushPanel(false);
+            setShowShapePanel(false);
             break;
         }
       }
@@ -369,19 +464,151 @@ function App() {
     canvas.renderAll();
   };
 
-  // Export as image
+  // Workspace Management Functions
+  const handleNewWorkspace = useCallback(() => {
+    if (!workspaceManagerRef.current) return;
+    
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    
+    // Save current workspace before creating new one
+    if (currentWorkspaceId) {
+      const canvasData = canvas.toJSON();
+      const thumbnail = canvas.toDataURL({
+        format: 'png',
+        quality: 0.3,
+        multiplier: 0.1
+      });
+      workspaceManagerRef.current.updateWorkspaceData(canvasData, thumbnail);
+    }
+    
+    // Create new workspace (canvas will be cleared by useEffect)
+    const newWorkspace = workspaceManagerRef.current.createWorkspace();
+    setWorkspaces(workspaceManagerRef.current.getAllWorkspaces());
+    setCurrentWorkspaceId(newWorkspace.id);
+  }, [currentWorkspaceId]);
+
+  // React event handlers for right-click context menu
+  const handleCanvasContextMenu = useCallback((e) => {
+    console.log('React onContextMenu event triggered!', e);
+    e.preventDefault();
+    e.stopPropagation();
+    
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) {
+      console.log('No canvas available');
+      return;
+    }
+    
+    // Get canvas coordinates
+    const rect = canvasRef.current.getBoundingClientRect();
+    const pointer = {
+      x: e.clientX - rect.left,
+      y: e.clientY - rect.top
+    };
+    
+    console.log('Mouse position:', { clientX: e.clientX, clientY: e.clientY, pointer });
+    
+    // Find object at pointer position
+    const target = canvas.findTarget(e.nativeEvent || e, false);
+    console.log('Found target:', target);
+    
+    if (target) {
+      canvas.setActiveObject(target);
+      canvas.renderAll();
+      setSelectedObject(target);
+      
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        object: target
+      });
+      
+      console.log('Context menu created at:', e.clientX, e.clientY, 'for target:', target.type);
+    } else {
+      console.log('No object found, showing general context menu');
+      setContextMenu({
+        x: e.clientX,
+        y: e.clientY,
+        object: null
+      });
+    }
+  }, []);
+
+  const handleCanvasMouseDown = useCallback((e) => {
+    console.log('React onMouseDown event:', e.button);
+    // Close context menu on left click
+    if (e.button !== 2) {
+      setContextMenu(null);
+    }
+  }, []);
+
+  const handleSwitchWorkspace = useCallback((workspaceId) => {
+    if (!workspaceManagerRef.current || workspaceId === currentWorkspaceId) return;
+    
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    
+    // Save current workspace before switching
+    if (currentWorkspaceId) {
+      const canvasData = canvas.toJSON();
+      const thumbnail = canvas.toDataURL({
+        format: 'png',
+        quality: 0.3,
+        multiplier: 0.1
+      });
+      workspaceManagerRef.current.updateWorkspaceData(canvasData, thumbnail);
+    }
+    
+    // Switch workspace (canvas data will be loaded by useEffect)
+    workspaceManagerRef.current.switchToWorkspace(workspaceId);
+    setCurrentWorkspaceId(workspaceId);
+    setWorkspaces(workspaceManagerRef.current.getAllWorkspaces());
+  }, [currentWorkspaceId]);
+
+  const handleDeleteWorkspace = useCallback((workspaceId) => {
+    if (!workspaceManagerRef.current) return;
+    
+    if (workspaceManagerRef.current.deleteWorkspace(workspaceId)) {
+      setWorkspaces(workspaceManagerRef.current.getAllWorkspaces());
+      setCurrentWorkspaceId(workspaceManagerRef.current.currentWorkspaceId);
+    }
+  }, []);
+
+  const handleRenameWorkspace = useCallback((workspaceId, newName) => {
+    if (!workspaceManagerRef.current) return;
+    
+    if (workspaceManagerRef.current.renameWorkspace(workspaceId, newName)) {
+      setWorkspaces(workspaceManagerRef.current.getAllWorkspaces());
+    }
+  }, []);
+
+  // Export as image (visible area only)
   const exportCanvas = () => {
     const canvas = fabricCanvasRef.current;
-    const originalZoom = canvas.getZoom();
-    canvas.setZoom(1); // Reset zoom for export
+    const zoom = canvas.getZoom();
+    const vpt = canvas.viewportTransform;
     
+    // Get the visible area bounds in canvas coordinates
+    const canvasWidth = canvas.getWidth();
+    const canvasHeight = canvas.getHeight();
+    
+    // Calculate the visible area
+    const left = -vpt[4] / zoom;
+    const top = -vpt[5] / zoom;
+    const width = canvasWidth / zoom;
+    const height = canvasHeight / zoom;
+    
+    // Use Fabric.js toDataURL with specific cropping area
     const dataURL = canvas.toDataURL({
       format: 'jpeg',
       quality: 0.9,
-      multiplier: 2
+      multiplier: 2,
+      left: left,
+      top: top,
+      width: width,
+      height: height
     });
-    
-    canvas.setZoom(originalZoom); // Restore zoom
     
     const link = document.createElement('a');
     link.download = 'artwork.jpg';
@@ -389,11 +616,160 @@ function App() {
     link.click();
   };
 
+  // AI Generation Functions
+  const handleAIGenerate = async () => {
+    if (!aiApiKey) {
+      setShowAIPanel(true);
+      return;
+    }
+
+    if (!aiService) {
+      const service = new AIService(aiApiKey);
+      setAiService(service);
+    }
+
+    try {
+      setIsAIGenerating(true);
+      
+      // Get current canvas as base64 following your pattern
+      const canvas = fabricCanvasRef.current;
+      const zoom = canvas.getZoom();
+      const vpt = canvas.viewportTransform;
+      
+      // Calculate visible area
+      const canvasWidth = canvas.getWidth();
+      const canvasHeight = canvas.getHeight();
+      const left = -vpt[4] / zoom;
+      const top = -vpt[5] / zoom;
+      const width = canvasWidth / zoom;
+      const height = canvasHeight / zoom;
+      
+      // Get base64 of visible area
+      const dataURL = canvas.toDataURL({
+        format: 'jpeg',
+        quality: 0.9,
+        multiplier: 1,
+        left: left,
+        top: top,
+        width: width,
+        height: height
+      });
+      
+      // Extract base64 data (remove data:image/jpeg;base64, prefix)
+      const base64Data = dataURL.split(',')[1];
+      
+      // Generate using AI service with your exact pattern
+      const service = aiService || new AIService(aiApiKey);
+      const results = await service.generateContent(base64Data, 'image/jpeg');
+      
+      if (results.image) {
+        // Convert base64 back to image and add to canvas
+        const img = new Image();
+        img.onload = () => {
+          const fabricImage = new fabric.Image(img, {
+            left: 100,
+            top: 100,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            // Mark as AI-generated for special handling
+            isAIGenerated: true,
+            aiImageData: results.image
+          });
+          
+          canvas.add(fabricImage);
+          canvas.setActiveObject(fabricImage);
+          canvas.renderAll();
+        };
+        img.src = `data:image/png;base64,${results.image}`;
+      }
+      
+      if (results.text) {
+        console.log('AI Response Text:', results.text);
+      }
+      
+    } catch (error) {
+      console.error('AI Generation error:', error);
+      alert(`AI Generation failed: ${error.message}`);
+    } finally {
+      setIsAIGenerating(false);
+    }
+  };
+
+  const handleAIApiKeySubmit = () => {
+    if (aiApiKey) {
+      const service = new AIService(aiApiKey);
+      setAiService(service);
+      setShowAIPanel(false);
+      handleAIGenerate();
+    }
+  };
+
+  // Download AI-generated image
+  const downloadAIImage = (object) => {
+    if (object.isAIGenerated && object.aiImageData) {
+      const link = document.createElement('a');
+      link.href = `data:image/png;base64,${object.aiImageData}`;
+      link.download = `ai-generated-${Date.now()}.png`;
+      link.click();
+    }
+  };
+
+  // Context menu actions
+  const handleContextMenuAction = (action) => {
+    const object = contextMenu?.object;
+    if (!object) return;
+
+    switch (action) {
+      case 'download':
+        if (object.isAIGenerated) {
+          downloadAIImage(object);
+        }
+        break;
+      case 'delete':
+        const canvas = fabricCanvasRef.current;
+        canvas.remove(object);
+        canvas.renderAll();
+        break;
+      case 'duplicate':
+        object.clone((cloned) => {
+          const canvas = fabricCanvasRef.current;
+          cloned.set({
+            left: cloned.left + 20,
+            top: cloned.top + 20,
+          });
+          canvas.add(cloned);
+          canvas.setActiveObject(cloned);
+          canvas.renderAll();
+        });
+        break;
+    }
+    
+    setContextMenu(null);
+  };
+
   return (
     <div className="app-container">
+      {/* Workspace Tabs */}
+      {workspaces.length > 0 && (
+        <WorkspaceTabs
+          workspaces={workspaces}
+          currentWorkspaceId={currentWorkspaceId}
+          onSwitch={handleSwitchWorkspace}
+          onNew={handleNewWorkspace}
+          onDelete={handleDeleteWorkspace}
+          onRename={handleRenameWorkspace}
+          showPanel={showWorkspacePanel}
+          setShowPanel={setShowWorkspacePanel}
+        />
+      )}
+
       {/* Canvas */}
       <div className="canvas-container">
-        <div className="canvas-wrapper">
+        <div 
+          className="canvas-wrapper"
+          onContextMenu={handleCanvasContextMenu}
+          onMouseDown={handleCanvasMouseDown}
+        >
           <canvas ref={canvasRef} />
         </div>
       </div>
@@ -514,7 +890,8 @@ function App() {
             <div><strong>R</strong> - Add Rectangle</div>
             <div><strong>C</strong> - Add Circle</div>
             <div><strong>Delete/Backspace</strong> - Delete Selected</div>
-            <div><strong>Esc</strong> - Deselect All</div>
+            <div><strong>Esc</strong> - Deselect All / Close Panels</div>
+            <div><strong>N</strong> - New Workspace</div>
             <hr style={{ margin: '8px 0', opacity: 0.2 }} />
             <div><strong>⌘/Ctrl + A</strong> - Select All</div>
             <div><strong>⌘/Ctrl + D</strong> - Duplicate</div>
@@ -526,6 +903,141 @@ function App() {
             <div><strong>⌘/Ctrl + 0</strong> - Reset Zoom</div>
             <hr style={{ margin: '8px 0', opacity: 0.2 }} />
             <div><strong>H</strong> - Toggle This Help</div>
+          </div>
+        </div>
+      )}
+
+      {/* AI API Key Panel */}
+      {showAIPanel && (
+        <div className="floating-panel" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '400px', zIndex: 1000 }}>
+          <button className="close-panel" onClick={() => setShowAIPanel(false)}>×</button>
+          <div className="panel-header">AI Generation Setup</div>
+          <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
+            <p style={{ marginBottom: '12px', color: '#666' }}>
+              Enter your Google GenAI API key to enable AI image generation
+            </p>
+            <input
+              type="password"
+              placeholder="Enter your Google GenAI API key"
+              value={aiApiKey}
+              onChange={(e) => setAiApiKey(e.target.value)}
+              style={{
+                width: '100%',
+                padding: '8px',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                marginBottom: '12px',
+                fontSize: '14px'
+              }}
+              onKeyPress={(e) => e.key === 'Enter' && handleAIApiKeySubmit()}
+            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                onClick={handleAIApiKeySubmit}
+                disabled={!aiApiKey}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: aiApiKey ? '#4CAF50' : '#ccc',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: aiApiKey ? 'pointer' : 'not-allowed',
+                  fontSize: '14px'
+                }}
+              >
+                Start AI Generation
+              </button>
+              <button
+                onClick={() => setShowAIPanel(false)}
+                style={{
+                  padding: '8px 16px',
+                  backgroundColor: '#f44336',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: 'pointer',
+                  fontSize: '14px'
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+            <p style={{ marginTop: '12px', fontSize: '12px', color: '#888' }}>
+              The AI will analyze your current canvas and generate enhanced content based on what it sees.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <div 
+          className="context-menu"
+          style={{
+            position: 'fixed',
+            left: contextMenu.x,
+            top: contextMenu.y,
+            backgroundColor: 'white',
+            border: '1px solid #ccc',
+            borderRadius: '6px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.2)',
+            zIndex: 1001,
+            minWidth: '150px',
+            overflow: 'hidden'
+          }}
+        >
+          {contextMenu.object?.isAIGenerated && (
+            <div 
+              className="context-menu-item"
+              onClick={() => handleContextMenuAction('download')}
+              style={{
+                padding: '8px 12px',
+                cursor: 'pointer',
+                fontSize: '14px',
+                borderBottom: '1px solid #eee',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+            >
+              📥 Download AI Image
+            </div>
+          )}
+          <div 
+            className="context-menu-item"
+            onClick={() => handleContextMenuAction('duplicate')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              borderBottom: '1px solid #eee',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#f5f5f5'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+          >
+            📋 Duplicate
+          </div>
+          <div 
+            className="context-menu-item"
+            onClick={() => handleContextMenuAction('delete')}
+            style={{
+              padding: '8px 12px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              color: '#f44336',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px'
+            }}
+            onMouseEnter={(e) => e.target.style.backgroundColor = '#ffebee'}
+            onMouseLeave={(e) => e.target.style.backgroundColor = 'white'}
+          >
+            🗑️ Delete
           </div>
         </div>
       )}
@@ -633,6 +1145,18 @@ function App() {
           </div>
 
           <div className="dock-divider" />
+
+          {/* AI Generation */}
+          <div 
+            className={`dock-item ${isAIGenerating ? 'active' : ''}`}
+            onClick={handleAIGenerate}
+            style={isAIGenerating ? { opacity: 0.6 } : {}}
+          >
+            {isAIGenerating ? '⏳' : '🤖'}
+            <span className="dock-tooltip">
+              {isAIGenerating ? 'AI Generating...' : 'AI Generate'}
+            </span>
+          </div>
 
           {/* Help */}
           <div 
