@@ -5,10 +5,12 @@ export class AIService {
     this.ai = new GoogleGenAI({ apiKey });
   }
 
-  async generateContent(base64Image, mimeType = "image/jpeg") {
+  async generateContent(base64Image, mimeType = "image/jpeg", customPrompt = null) {
     try {
+      const promptText = customPrompt || "This is a canvas screenshot with instruction arrows and text annotations that tell you what to create or modify. READ and FOLLOW the arrows and text instructions, but DO NOT include them in your output. Generate the final image based on the instructions, but exclude: all instruction arrows, annotation text, UI elements, canvas interface, toolbars, and annotation markings. IMPORTANT: Crop tightly around the actual content - remove ALL empty white canvas space, borders, and padding. Return only the essential image content itself, properly cropped to its natural boundaries with no excess white space. Ensure ALL elements have consistent lighting, shadows, color temperature, and visual style - everything should look naturally integrated and cohesive, not like separate pasted elements. The final image should feel unified with harmonious lighting and seamless blending of all components.";
+      
       const prompt = [
-        { text: "This is a canvas screenshot with instruction arrows and text annotations that tell you what to create or modify. READ and FOLLOW the arrows and text instructions, but DO NOT include them in your output. Generate the final image based on the instructions, but exclude: all instruction arrows, annotation text, UI elements, canvas interface, toolbars, and annotation markings. IMPORTANT: Crop tightly around the actual content - remove ALL empty white canvas space, borders, and padding. Return only the essential image content itself, properly cropped to its natural boundaries with no excess white space. Ensure ALL elements have consistent lighting, shadows, color temperature, and visual style - everything should look naturally integrated and cohesive, not like separate pasted elements. The final image should feel unified with harmonious lighting and seamless blending of all components." },
+        { text: promptText },
         {
           inlineData: {
             mimeType: mimeType,

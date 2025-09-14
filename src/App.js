@@ -38,6 +38,16 @@ function App() {
   // Drag and drop state
   const [isDragOver, setIsDragOver] = useState(false);
   
+  // AI UX enhancements
+  const [showAITutorial, setShowAITutorial] = useState(false);
+  const [aiProcessingStage, setAiProcessingStage] = useState('idle');
+  
+  // Settings state
+  const [showSettings, setShowSettings] = useState(false);
+  const [customAIPrompt, setCustomAIPrompt] = useState(
+    "This is a canvas screenshot with instruction arrows and text annotations that tell you what to create or modify. READ and FOLLOW the arrows and text instructions, but DO NOT include them in your output. Generate the final image based on the instructions, but exclude: all instruction arrows, annotation text, UI elements, canvas interface, toolbars, and annotation markings. IMPORTANT: Crop tightly around the actual content - remove ALL empty white canvas space, borders, and padding. Return only the essential image content itself, properly cropped to its natural boundaries with no excess white space. Ensure ALL elements have consistent lighting, shadows, color temperature, and visual style - everything should look naturally integrated and cohesive, not like separate pasted elements. The final image should feel unified with harmonious lighting and seamless blending of all components."
+  );
+  
   // Workspace state
   const [workspaces, setWorkspaces] = useState([]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(null);
@@ -57,6 +67,20 @@ function App() {
     const workspaceName = currentWorkspace?.name || 'Workspace';
     document.title = `${workspaceName} - Canana | AI-Powered Digital Canvas`;
   }, [workspaces, currentWorkspaceId]);
+
+  // Load custom AI prompt from localStorage
+  useEffect(() => {
+    const savedPrompt = localStorage.getItem('canana_ai_prompt');
+    if (savedPrompt) {
+      setCustomAIPrompt(savedPrompt);
+    }
+  }, []);
+
+  // Save custom AI prompt to localStorage
+  const saveCustomPrompt = (newPrompt) => {
+    setCustomAIPrompt(newPrompt);
+    localStorage.setItem('canana_ai_prompt', newPrompt);
+  };
 
   // Initialize canvas (only once)
   useEffect(() => {
@@ -728,6 +752,7 @@ function App() {
 
     try {
       setIsAIGenerating(true);
+      setAiProcessingStage('preparing');
       
       // Get current canvas as base64 following your pattern
       const canvas = fabricCanvasRef.current;
@@ -756,9 +781,13 @@ function App() {
       // Extract base64 data (remove data:image/jpeg;base64, prefix)
       const base64Data = dataURL.split(',')[1];
       
-      // Generate using AI service with your exact pattern
+      setAiProcessingStage('processing');
+      
+      // Generate using AI service with custom prompt
       const service = aiService || new AIService(aiApiKey);
-      const results = await service.generateContent(base64Data, 'image/jpeg');
+      const results = await service.generateContent(base64Data, 'image/jpeg', customAIPrompt);
+      
+      setAiProcessingStage('generating');
       
       if (results.image) {
         // Convert base64 back to image and add to canvas
@@ -777,6 +806,9 @@ function App() {
           canvas.add(fabricImage);
           canvas.setActiveObject(fabricImage);
           canvas.renderAll();
+          
+          setAiProcessingStage('complete');
+          setTimeout(() => setAiProcessingStage('idle'), 2000);
         };
         img.src = `data:image/png;base64,${results.image}`;
       }
@@ -787,9 +819,11 @@ function App() {
       
     } catch (error) {
       console.error('AI Generation error:', error);
-      alert(`AI Generation failed: ${error.message}`);
+      setAiProcessingStage('error');
+      alert(`✨ AI Magic encountered an issue: ${error.message}`);
+      setTimeout(() => setAiProcessingStage('idle'), 3000);
     } finally {
-      setIsAIGenerating(false);
+      setTimeout(() => setIsAIGenerating(false), aiProcessingStage === 'complete' ? 2000 : 0);
     }
   };
 
@@ -889,6 +923,34 @@ function App() {
           onDrop={handleDrop}
         >
           <canvas ref={canvasRef} />
+          
+          {/* AI Processing Overlay */}
+          {isAIGenerating && (
+            <div className="ai-processing-overlay">
+              <div className="ai-processing-content">
+                <div className="ai-processing-icon">✨</div>
+                <h3 className="ai-processing-title">AI Magic in Progress</h3>
+                <div className="ai-processing-stage">
+                  {aiProcessingStage === 'preparing' && 'Preparing your canvas...'}
+                  {aiProcessingStage === 'processing' && 'Sending to AI brain...'}
+                  {aiProcessingStage === 'generating' && 'Creating magic...'}
+                  {aiProcessingStage === 'complete' && '✨ Masterpiece created!'}
+                  {aiProcessingStage === 'error' && '❌ Something went wrong'}
+                </div>
+                <div className="ai-processing-bar">
+                  <div 
+                    className="ai-processing-progress"
+                    style={{
+                      width: aiProcessingStage === 'preparing' ? '25%' : 
+                             aiProcessingStage === 'processing' ? '60%' : 
+                             aiProcessingStage === 'generating' ? '85%' : 
+                             aiProcessingStage === 'complete' ? '100%' : '0%'
+                    }}
+                  ></div>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -1025,64 +1087,141 @@ function App() {
         </div>
       )}
 
-      {/* AI API Key Panel */}
+      {/* AI API Key Panel - Enhanced */}
       {showAIPanel && (
-        <div className="floating-panel" style={{ top: '50%', left: '50%', transform: 'translate(-50%, -50%)', width: '400px', zIndex: 1000 }}>
+        <div className="ai-config-panel">
           <button className="close-panel" onClick={() => setShowAIPanel(false)}>×</button>
-          <div className="panel-header">AI Generation Setup</div>
-          <div style={{ fontSize: '14px', lineHeight: '1.6' }}>
-            <p style={{ marginBottom: '12px', color: '#666' }}>
-              Enter your Google GenAI API key to enable AI image generation
-            </p>
+          
+          <div className="ai-config-header">
+            <div className="ai-config-icon">✨</div>
+            <h3 className="ai-config-title">AI Magic Setup</h3>
+            <p className="ai-config-subtitle">Configure your Google Gemini API key to unlock AI-powered canvas transformation</p>
+          </div>
+          
+          <div className="ai-config-form">
+            <label className="ai-config-label">Google Gemini API Key</label>
             <input
               type="password"
-              placeholder="Enter your Google GenAI API key"
+              className="ai-config-input"
+              placeholder="Enter your API key..."
               value={aiApiKey}
               onChange={(e) => setAiApiKey(e.target.value)}
-              style={{
-                width: '100%',
-                padding: '8px',
-                border: '1px solid #ddd',
-                borderRadius: '4px',
-                marginBottom: '12px',
-                fontSize: '14px'
-              }}
               onKeyPress={(e) => e.key === 'Enter' && handleAIApiKeySubmit()}
             />
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                onClick={handleAIApiKeySubmit}
-                disabled={!aiApiKey}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: aiApiKey ? '#4CAF50' : '#ccc',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: aiApiKey ? 'pointer' : 'not-allowed',
-                  fontSize: '14px'
-                }}
-              >
-                Start AI Generation
-              </button>
-              <button
-                onClick={() => setShowAIPanel(false)}
-                style={{
-                  padding: '8px 16px',
-                  backgroundColor: '#f44336',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '14px'
-                }}
-              >
-                Cancel
-              </button>
+            <button 
+              className="ai-config-button"
+              onClick={handleAIApiKeySubmit}
+              disabled={!aiApiKey}
+            >
+              <span>🚀 Start Creating Magic</span>
+            </button>
+          </div>
+          
+          <div className="ai-config-instructions">
+            <h4>How to use AI Magic:</h4>
+            <ol>
+              <li>Draw, sketch, or add images to your canvas</li>
+              <li>Add arrows and text to guide the AI</li>
+              <li>Click the ✨ AI Magic button</li>
+              <li>Watch as AI transforms your canvas!</li>
+            </ol>
+          </div>
+          
+          <div className="ai-config-privacy">
+            <div>🔒 Your API key is stored securely on your device</div>
+            <div>🌟 No data is shared with third parties</div>
+          </div>
+        </div>
+      )}
+
+      {/* Settings Panel */}
+      {showSettings && (
+        <div className="settings-panel">
+          <button className="close-panel" onClick={() => setShowSettings(false)}>×</button>
+          
+          <div className="settings-header">
+            <div className="settings-icon">⚙️</div>
+            <h3 className="settings-title">Canana Settings</h3>
+            <p className="settings-subtitle">Customize your AI experience</p>
+          </div>
+          
+          <div className="settings-content">
+            <div className="settings-section">
+              <h4 className="settings-section-title">AI Prompt Customization</h4>
+              <p className="settings-description">
+                Customize the prompt that guides AI generation. This controls how the AI interprets and transforms your canvas.
+              </p>
+              
+              <div className="prompt-templates">
+                <h5>Quick Templates:</h5>
+                <div className="template-buttons">
+                  <button 
+                    className="template-button"
+                    onClick={() => saveCustomPrompt("Create a professional, polished artwork based on this rough sketch. Maintain the core composition and elements but enhance the quality, add proper lighting, shadows, and details. Return only the refined artwork without any canvas interface elements.")}
+                  >
+                    🎨 Sketch Enhancer
+                  </button>
+                  <button 
+                    className="template-button"
+                    onClick={() => saveCustomPrompt("Transform this into a photorealistic version. Add realistic lighting, textures, materials, and atmospheric effects. Make it look like a high-quality photograph while keeping the same composition and subjects.")}
+                  >
+                    📸 Photo Realistic
+                  </button>
+                  <button 
+                    className="template-button"
+                    onClick={() => saveCustomPrompt("Convert this into a beautiful digital art piece with vibrant colors, smooth gradients, and modern artistic styling. Add creative effects and make it visually stunning while preserving the original concept.")}
+                  >
+                    🌈 Digital Art
+                  </button>
+                  <button 
+                    className="template-button"
+                    onClick={() => saveCustomPrompt("Follow any arrows, text instructions, or annotations in the image to modify or enhance the content as directed. Remove all instructional elements and return only the final result with clean composition and professional quality.")}
+                  >
+                    ✏️ Instruction Follower
+                  </button>
+                </div>
+              </div>
+              
+              <div className="custom-prompt-editor">
+                <label className="prompt-label">Custom AI Prompt:</label>
+                <textarea
+                  className="prompt-textarea"
+                  value={customAIPrompt}
+                  onChange={(e) => setCustomAIPrompt(e.target.value)}
+                  placeholder="Enter your custom AI prompt here..."
+                  rows={8}
+                />
+                <div className="prompt-actions">
+                  <button 
+                    className="save-prompt-button"
+                    onClick={() => saveCustomPrompt(customAIPrompt)}
+                  >
+                    💾 Save Prompt
+                  </button>
+                  <button 
+                    className="reset-prompt-button"
+                    onClick={() => {
+                      const defaultPrompt = "This is a canvas screenshot with instruction arrows and text annotations that tell you what to create or modify. READ and FOLLOW the arrows and text instructions, but DO NOT include them in your output. Generate the final image based on the instructions, but exclude: all instruction arrows, annotation text, UI elements, canvas interface, toolbars, and annotation markings. IMPORTANT: Crop tightly around the actual content - remove ALL empty white canvas space, borders, and padding. Return only the essential image content itself, properly cropped to its natural boundaries with no excess white space. Ensure ALL elements have consistent lighting, shadows, color temperature, and visual style - everything should look naturally integrated and cohesive, not like separate pasted elements. The final image should feel unified with harmonious lighting and seamless blending of all components.";
+                      saveCustomPrompt(defaultPrompt);
+                    }}
+                  >
+                    🔄 Reset to Default
+                  </button>
+                </div>
+              </div>
+              
+              <div className="prompt-preview">
+                <h5>Current Prompt Preview:</h5>
+                <div className="prompt-preview-text">
+                  {customAIPrompt.length > 150 
+                    ? `${customAIPrompt.substring(0, 150)}...` 
+                    : customAIPrompt}
+                </div>
+                <div className="prompt-stats">
+                  Length: {customAIPrompt.length} characters
+                </div>
+              </div>
             </div>
-            <p style={{ marginTop: '12px', fontSize: '12px', color: '#888' }}>
-              The AI will analyze your current canvas and generate enhanced content based on what it sees.
-            </p>
           </div>
         </div>
       )}
@@ -1264,19 +1403,30 @@ function App() {
 
           <div className="dock-divider" />
 
-          {/* AI Generation */}
+          {/* AI Generation - Featured */}
           <div 
-            className={`dock-item ${isAIGenerating ? 'active loading' : ''}`}
+            className={`dock-item ai-button ${isAIGenerating ? 'active loading' : ''}`}
             onClick={handleAIGenerate}
           >
             {isAIGenerating ? (
               <div className="canana-loading-spinner"></div>
             ) : (
-              '🤖'
+              <span className="ai-icon">✨</span>
             )}
             <span className="dock-tooltip">
-              {isAIGenerating ? 'AI Generating...' : 'AI Generate'}
+              {isAIGenerating ? 'AI Magic in Progress...' : '✨ AI Magic - Transform Your Canvas'}
             </span>
+          </div>
+
+          <div className="dock-divider" />
+
+          {/* Settings */}
+          <div 
+            className={`dock-item ${showSettings ? 'active' : ''}`}
+            onClick={() => setShowSettings(!showSettings)}
+          >
+            ⚙️
+            <span className="dock-tooltip">Settings - Customize AI Prompt</span>
           </div>
 
           {/* Help */}
