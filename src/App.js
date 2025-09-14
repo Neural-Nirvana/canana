@@ -10,6 +10,7 @@ function App() {
   const fabricCanvasRef = useRef(null);
   const fileInputRef = useRef(null);
   const workspaceManagerRef = useRef(null);
+  const dockRef = useRef(null);
   
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(5);
@@ -65,8 +66,35 @@ function App() {
   useEffect(() => {
     const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
     const workspaceName = currentWorkspace?.name || 'Workspace';
-    document.title = `${workspaceName} - Canana | AI-Powered Digital Canvas`;
+    document.title = `${workspaceName} - Canana | Visual Prompting Canvas`;
   }, [workspaces, currentWorkspaceId]);
+
+  // Handle dock scroll indicator visibility
+  useEffect(() => {
+    const dock = dockRef.current;
+    if (!dock) return;
+
+    const updateScrollIndicator = () => {
+      const canScroll = dock.scrollWidth > dock.clientWidth;
+      const isAtEnd = dock.scrollLeft >= (dock.scrollWidth - dock.clientWidth - 10);
+      
+      // Add/remove classes for scroll state
+      dock.classList.toggle('can-scroll', canScroll && !isAtEnd);
+      dock.classList.toggle('scroll-end', isAtEnd);
+    };
+
+    // Check on mount and resize
+    updateScrollIndicator();
+    
+    // Listen to scroll events
+    dock.addEventListener('scroll', updateScrollIndicator);
+    window.addEventListener('resize', updateScrollIndicator);
+
+    return () => {
+      dock.removeEventListener('scroll', updateScrollIndicator);
+      window.removeEventListener('resize', updateScrollIndicator);
+    };
+  }, []);
 
   // Load custom AI prompt from localStorage
   useEffect(() => {
@@ -86,11 +114,19 @@ function App() {
   useEffect(() => {
     if (!canvasRef.current || fabricCanvasRef.current) return;
     
-    // Create Fabric.js canvas - full screen with space for dock
+    // Create Fabric.js canvas - responsive with mobile optimizations
+    const isMobile = window.innerWidth <= 768;
     const canvas = new fabric.Canvas(canvasRef.current, {
-      width: window.innerWidth - 40,
-      height: window.innerHeight - 120, // Leave space for dock
-      backgroundColor: '#ffffff'
+      width: window.innerWidth - (isMobile ? 24 : 40),
+      height: window.innerHeight - (isMobile ? 160 : 120), // More space for mobile dock and header
+      backgroundColor: '#ffffff',
+      // Enhanced mobile touch support
+      allowTouchScrolling: true,
+      imageSmoothingEnabled: true,
+      renderOnAddRemove: true,
+      skipTargetFind: false,
+      touchStartX: null,
+      touchStartY: null
     });
 
     fabricCanvasRef.current = canvas;
@@ -113,6 +149,28 @@ function App() {
     canvas.on('object:modified', saveWorkspace);
     canvas.on('object:removed', saveWorkspace);
 
+    // Handle text editing events - simpler approach
+    canvas.on('text:editing:entered', (options) => {
+      const textObject = options.target;
+      if (textObject.isPlaceholder && textObject.text === 'Text goes here') {
+        textObject.text = '';
+        textObject.isPlaceholder = false;
+        canvas.renderAll();
+      }
+    });
+
+    canvas.on('text:editing:exited', (options) => {
+      const textObject = options.target;
+      
+      // If text is empty, restore placeholder
+      if (!textObject.text.trim()) {
+        textObject.text = 'Text goes here';
+        textObject.isPlaceholder = true;
+      }
+      
+      canvas.renderAll();
+    });
+
     // Store canvas reference for use in React event handlers
     fabricCanvasRef.current = canvas;
 
@@ -125,12 +183,82 @@ function App() {
 
     document.addEventListener('click', handleOutsideClick);
 
-    // Handle window resize
-    const handleResize = () => {
-      canvas.setDimensions({
-        width: window.innerWidth - 40,
-        height: window.innerHeight - 120
+    // Enhanced mobile touch gestures for visual prompting
+    if (isMobile) {
+      // Prevent default touch behaviors that interfere with drawing
+      canvas.upperCanvasEl.addEventListener('touchstart', (e) => {
+        // Allow single touch for drawing, prevent multi-touch zoom
+        if (e.touches.length === 1) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      canvas.upperCanvasEl.addEventListener('touchmove', (e) => {
+        // Prevent scroll while drawing
+        if (e.touches.length === 1 && canvas.isDrawingMode) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      // Enhanced touch sensitivity for precise visual prompting
+      canvas.touchStartX = null;
+      canvas.touchStartY = null;
+      
+      canvas.on('touch:gesture', (e) => {
+        // Allow pinch to zoom on canvas
+        if (e.e.touches && e.e.touches.length === 2) {
+          const touch1 = e.e.touches[0];
+          const touch2 = e.e.touches[1];
+          const dist = Math.sqrt(
+            Math.pow(touch2.clientX - touch1.clientX, 2) +
+            Math.pow(touch2.clientY - touch1.clientY, 2)
+          );
+          
+          if (!canvas.lastPinchDistance) {
+            canvas.lastPinchDistance = dist;
+            return;
+          }
+          
+          const scale = dist / canvas.lastPinchDistance;
+          const zoom = canvas.getZoom() * scale;
+          
+          // Limit zoom range for mobile
+          const maxZoom = 3;
+          const minZoom = 0.5;
+          
+          if (zoom >= minZoom && zoom <= maxZoom) {
+            const center = canvas.getCenter();
+            canvas.zoomToPoint(new fabric.Point(center.left, center.top), zoom);
+          }
+          
+          canvas.lastPinchDistance = dist;
+          canvas.renderAll();
+        }
       });
+      
+      canvas.on('touch:drag', (e) => {
+        // Enhanced drag support for mobile visual prompting
+        if (e.e.touches && e.e.touches.length === 1) {
+          const touch = e.e.touches[0];
+          const rect = canvas.upperCanvasEl.getBoundingClientRect();
+          const x = touch.clientX - rect.left;
+          const y = touch.clientY - rect.top;
+          
+          // Update last touch position for smooth drawing
+          canvas.lastTouchX = x;
+          canvas.lastTouchY = y;
+        }
+      });
+    }
+
+    // Handle window resize with mobile considerations
+    const handleResize = () => {
+      const isMobileNow = window.innerWidth <= 768;
+      canvas.setDimensions({
+        width: window.innerWidth - (isMobileNow ? 24 : 40),
+        height: window.innerHeight - (isMobileNow ? 160 : 120)
+      });
+      canvas.renderAll();
     };
 
     window.addEventListener('resize', handleResize);
@@ -142,6 +270,8 @@ function App() {
       canvas.off('object:added', saveWorkspace);
       canvas.off('object:modified', saveWorkspace);
       canvas.off('object:removed', saveWorkspace);
+      canvas.off('text:editing:entered');
+      canvas.off('text:editing:exited');
       
       
       canvas.dispose();
@@ -173,8 +303,12 @@ function App() {
       const canvas = fabricCanvasRef.current;
       if (!canvas) return;
 
-      // Prevent shortcuts when typing in inputs
+      // Prevent shortcuts when typing in inputs or on mobile soft keyboards
       if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      
+      // Skip keyboard shortcuts on mobile devices (except specific ones)
+      const isMobile = window.innerWidth <= 768;
+      if (isMobile && !['Escape', 'Enter', 'Space'].includes(e.key)) return;
 
       // Command/Ctrl shortcuts
       if (e.metaKey || e.ctrlKey) {
@@ -323,19 +457,49 @@ function App() {
 
   // Add text
   const addText = () => {
-    const text = prompt('Enter text:');
-    if (!text) return;
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
 
-    const fabricText = new fabric.Text(text, {
+    // Use Textbox for better text handling - auto-sizes to content
+    const fabricText = new fabric.Textbox('Text goes here', {
       left: 100,
       top: 100,
       fontSize: 24,
-      fill: fillEnabled ? fillColor : 'transparent'
+      fill: fillEnabled ? fillColor : '#333333',
+      fontFamily: '-apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif',
+      backgroundColor: 'rgba(255, 255, 255, 0.9)',
+      padding: 5,
+      width: 180,  // Initial width, will expand as needed
+      splitByGrapheme: true,  // Better character handling
+      borderColor: '#667eea',
+      cornerColor: '#667eea',
+      cornerSize: 8,
+      cornerStyle: 'circle',
+      transparentCorners: false,
+      selectable: true,
+      editable: true,
+      dynamicMinWidth: 2,
+      lockScalingFlip: true,
+      minWidth: 20,
+      strokeWidth: 0,
+      hasControls: true,
+      hasBorders: true
     });
 
-    const canvas = fabricCanvasRef.current;
+    // Add custom properties for text editing
+    fabricText.isPlaceholder = true;
+    fabricText.originalText = 'Text goes here';
+
+    // Add the text to canvas
     canvas.add(fabricText);
     canvas.setActiveObject(fabricText);
+    
+    // Immediately enter edit mode for better UX
+    setTimeout(() => {
+      fabricText.enterEditing();
+      fabricText.selectAll();
+    }, 100);
+
     canvas.renderAll();
   };
 
@@ -886,7 +1050,7 @@ function App() {
         <div className="canana-logo">
           <span className="canana-icon">🎨</span>
           <h1 className="canana-title">Canana</h1>
-          <span className="canana-subtitle">AI-Powered Digital Canvas</span>
+          <span className="canana-subtitle">Visual Prompting for Nano Banana</span>
         </div>
         <div className="canana-actions">
           <div className="canana-workspace-info">
@@ -929,12 +1093,12 @@ function App() {
             <div className="ai-processing-overlay">
               <div className="ai-processing-content">
                 <div className="ai-processing-icon">✨</div>
-                <h3 className="ai-processing-title">AI Magic in Progress</h3>
+                <h3 className="ai-processing-title">Visual Prompting Active</h3>
                 <div className="ai-processing-stage">
-                  {aiProcessingStage === 'preparing' && 'Preparing your canvas...'}
-                  {aiProcessingStage === 'processing' && 'Sending to AI brain...'}
-                  {aiProcessingStage === 'generating' && 'Creating magic...'}
-                  {aiProcessingStage === 'complete' && '✨ Masterpiece created!'}
+                  {aiProcessingStage === 'preparing' && 'Analyzing visual prompts...'}
+                  {aiProcessingStage === 'processing' && 'Sending to Nano Banana...'}
+                  {aiProcessingStage === 'generating' && 'Nano Banana processing...'}
+                  {aiProcessingStage === 'complete' && '✨ Visual transformation complete!'}
                   {aiProcessingStage === 'error' && '❌ Something went wrong'}
                 </div>
                 <div className="ai-processing-bar">
@@ -1094,8 +1258,8 @@ function App() {
           
           <div className="ai-config-header">
             <div className="ai-config-icon">✨</div>
-            <h3 className="ai-config-title">AI Magic Setup</h3>
-            <p className="ai-config-subtitle">Configure your Google Gemini API key to unlock AI-powered canvas transformation</p>
+            <h3 className="ai-config-title">Visual Prompting Setup</h3>
+            <p className="ai-config-subtitle">Configure your Google Gemini API key to unlock visual prompting with Nano Banana</p>
           </div>
           
           <div className="ai-config-form">
@@ -1147,9 +1311,9 @@ function App() {
           
           <div className="settings-content">
             <div className="settings-section">
-              <h4 className="settings-section-title">AI Prompt Customization</h4>
+              <h4 className="settings-section-title">JSON Visual Prompting for Nano Banana</h4>
               <p className="settings-description">
-                Customize the prompt that guides AI generation. This controls how the AI interprets and transforms your canvas.
+                Use structured JSON prompts for 60% more accurate and consistent results with Nano Banana. JSON prompting provides precise control over visual transformations and reduces AI errors.
               </p>
               
               <div className="prompt-templates">
@@ -1157,38 +1321,134 @@ function App() {
                 <div className="template-buttons">
                   <button 
                     className="template-button"
-                    onClick={() => saveCustomPrompt("Create a professional, polished artwork based on this rough sketch. Maintain the core composition and elements but enhance the quality, add proper lighting, shadows, and details. Return only the refined artwork without any canvas interface elements.")}
+                    onClick={() => saveCustomPrompt(`{
+  "task": "sketch_enhancement",
+  "enhancement_type": "professional_artwork_refinement",
+  "input_analysis": {
+    "source_type": "rough_sketch",
+    "preserve_elements": ["core_composition", "main_subjects", "basic_structure"]
+  },
+  "transformation_requirements": {
+    "quality_enhancement": "professional_grade",
+    "lighting": "proper_directional_lighting",
+    "shadows": "realistic_depth_shadows",
+    "details": "enhanced_line_work_and_textures",
+    "finish": "polished_professional_artwork"
+  },
+  "output_specifications": {
+    "exclude": ["canvas_interface", "ui_elements", "sketch_guidelines"],
+    "include": "refined_artwork_only",
+    "style": "enhanced_original_style"
+  }
+}`)}
                   >
                     🎨 Sketch Enhancer
                   </button>
                   <button 
                     className="template-button"
-                    onClick={() => saveCustomPrompt("Transform this into a photorealistic version. Add realistic lighting, textures, materials, and atmospheric effects. Make it look like a high-quality photograph while keeping the same composition and subjects.")}
+                    onClick={() => saveCustomPrompt(`{
+  "task": "photorealistic_transformation",
+  "enhancement_type": "photograph_quality_rendering",
+  "input_analysis": {
+    "preserve_elements": ["composition", "subjects", "spatial_relationships"],
+    "transformation_target": "high_quality_photograph"
+  },
+  "realism_requirements": {
+    "lighting": "natural_photographic_lighting",
+    "textures": "realistic_surface_materials",
+    "materials": "accurate_material_properties",
+    "atmosphere": "environmental_depth_effects",
+    "shadows": "physically_accurate_shadows",
+    "reflections": "natural_light_interactions"
+  },
+  "output_specifications": {
+    "quality_level": "professional_photography",
+    "style": "photorealistic",
+    "resolution": "high_definition"
+  }
+}`)}
                   >
                     📸 Photo Realistic
                   </button>
                   <button 
                     className="template-button"
-                    onClick={() => saveCustomPrompt("Convert this into a beautiful digital art piece with vibrant colors, smooth gradients, and modern artistic styling. Add creative effects and make it visually stunning while preserving the original concept.")}
+                    onClick={() => saveCustomPrompt(`{
+  "task": "digital_art_transformation",
+  "enhancement_type": "modern_digital_artwork",
+  "input_analysis": {
+    "preserve_elements": ["original_concept", "core_composition"],
+    "transformation_target": "stunning_digital_art"
+  },
+  "artistic_requirements": {
+    "color_palette": "vibrant_saturated_colors",
+    "gradients": "smooth_color_transitions",
+    "styling": "contemporary_digital_art_techniques",
+    "effects": "creative_visual_enhancements",
+    "finish": "polished_digital_masterpiece"
+  },
+  "visual_enhancements": {
+    "color_vibrancy": "maximum",
+    "contrast": "dynamic_range",
+    "details": "crisp_digital_precision",
+    "overall_impact": "visually_stunning"
+  },
+  "output_specifications": {
+    "style": "modern_digital_art",
+    "quality": "professional_artwork"
+  }
+}`)}
                   >
                     🌈 Digital Art
                   </button>
                   <button 
                     className="template-button"
-                    onClick={() => saveCustomPrompt("Follow any arrows, text instructions, or annotations in the image to modify or enhance the content as directed. Remove all instructional elements and return only the final result with clean composition and professional quality.")}
+                    onClick={() => saveCustomPrompt(`{
+  "task": "instruction_following_enhancement",
+  "enhancement_type": "directed_visual_modification",
+  "input_analysis": {
+    "instruction_types": ["arrows", "text_annotations", "visual_markers"],
+    "processing_priority": "follow_visual_instructions_precisely"
+  },
+  "instruction_processing": {
+    "arrow_interpretation": "directional_modification_cues",
+    "text_instructions": "written_enhancement_directions",
+    "annotation_following": "precise_visual_guidance_execution",
+    "modification_scope": "as_directed_by_markings"
+  },
+  "output_requirements": {
+    "remove_completely": ["arrows", "text_annotations", "instruction_markers", "visual_guides"],
+    "preserve_modifications": "all_directed_changes",
+    "composition": "clean_professional_result",
+    "quality": "professional_grade_finish"
+  },
+  "final_specifications": {
+    "cleanliness": "no_instructional_artifacts",
+    "quality": "polished_professional_output"
+  }
+}`)}
                   >
                     ✏️ Instruction Follower
                   </button>
                 </div>
               </div>
               
+              <div className="json-prompting-tips">
+                <h5>💡 JSON Prompting Tips:</h5>
+                <ul>
+                  <li><strong>Structured Format:</strong> Use JSON objects for 60% better accuracy</li>
+                  <li><strong>Clear Keys:</strong> Define "task", "requirements", "output_specifications"</li>
+                  <li><strong>Nested Objects:</strong> Organize complex instructions hierarchically</li>
+                  <li><strong>Specific Values:</strong> Use precise descriptors over vague terms</li>
+                </ul>
+              </div>
+              
               <div className="custom-prompt-editor">
-                <label className="prompt-label">Custom AI Prompt:</label>
+                <label className="prompt-label">Custom JSON Prompt for Nano Banana:</label>
                 <textarea
                   className="prompt-textarea"
                   value={customAIPrompt}
                   onChange={(e) => setCustomAIPrompt(e.target.value)}
-                  placeholder="Enter your custom AI prompt here..."
+                  placeholder='{\n  "task": "your_enhancement_type",\n  "requirements": {\n    "style": "your_desired_style",\n    "quality": "professional_grade"\n  },\n  "output_specifications": {\n    "exclude": ["canvas_interface", "ui_elements"],\n    "include": "enhanced_content_only"\n  }\n}'
                   rows={8}
                 />
                 <div className="prompt-actions">
@@ -1301,7 +1561,7 @@ function App() {
 
       {/* macOS-style Dock */}
       <div className="dock-container">
-        <div className="dock">
+        <div className="dock" ref={dockRef}>
           {/* File Operations */}
           <input
             ref={fileInputRef}
@@ -1414,7 +1674,7 @@ function App() {
               <span className="ai-icon">✨</span>
             )}
             <span className="dock-tooltip">
-              {isAIGenerating ? 'AI Magic in Progress...' : '✨ AI Magic - Transform Your Canvas'}
+              {isAIGenerating ? 'Visual Prompting Active...' : '✨ Visual Prompting - Powered by Nano Banana'}
             </span>
           </div>
 
