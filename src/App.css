@@ -7,6 +7,7 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', 'Roboto', 'Helvetica Neue', sans-serif;
   overflow: hidden;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 .app-container {
@@ -14,6 +15,74 @@ body {
   flex-direction: column;
   height: 100vh;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Canana Branding */
+.canana-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 24px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.canana-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.canana-icon {
+  font-size: 28px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+}
+
+.canana-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.5px;
+}
+
+.canana-subtitle {
+  font-size: 12px;
+  color: #666;
+  font-weight: 500;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 4px 8px;
+  border-radius: 12px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
+}
+
+.canana-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.canana-workspace-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.current-workspace {
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+  background: rgba(102, 126, 234, 0.1);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(102, 126, 234, 0.2);
 }
 
 .canvas-container {
@@ -30,12 +99,19 @@ body {
   border-radius: 12px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
   overflow: hidden;
+  transition: all 0.3s ease;
 }
 
-/* macOS-style Dock */
+.canvas-wrapper.drag-over {
+  background: #f0f8ff;
+  box-shadow: 0 20px 60px rgba(0, 100, 255, 0.3);
+  border: 3px dashed #4CAF50;
+}
+
+/* Enhanced Canana Dock */
 .dock-container {
   position: fixed;
-  bottom: 10px;
+  bottom: 20px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 1000;
@@ -44,14 +120,16 @@ body {
 
 .dock {
   display: flex;
-  gap: 6px;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  gap: 8px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 20px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+  border-radius: 24px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.25), 
+              0 8px 32px rgba(102, 126, 234, 0.1),
+              inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .dock-divider {
@@ -61,30 +139,34 @@ body {
 }
 
 .dock-item {
-  width: 50px;
-  height: 50px;
+  width: 54px;
+  height: 54px;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  border-radius: 16px;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   font-size: 24px;
   position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
 .dock-item:hover {
-  transform: translateY(-10px) scale(1.2);
-  background: white;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+  transform: translateY(-8px) scale(1.15);
+  background: rgba(255, 255, 255, 1);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15), 
+              0 4px 16px rgba(102, 126, 234, 0.2);
+  border-color: rgba(102, 126, 234, 0.3);
 }
 
 .dock-item.active {
-  background: #4CAF50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
-  transform: scale(1.1);
+  transform: scale(1.08);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
 }
 
 .dock-item.danger {
@@ -161,44 +243,51 @@ body {
   color: #000;
 }
 
-/* Workspace Management */
+/* Enhanced Workspace Management */
 .workspace-tabs {
   position: fixed;
-  top: 10px;
+  top: 80px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
   gap: 8px;
-  padding: 8px;
-  background: rgba(255, 255, 255, 0.25);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.9);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 16px;
   z-index: 998;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
 }
 
 .workspace-tab {
-  padding: 6px 12px;
-  background: rgba(255, 255, 255, 0.8);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  padding: 8px 14px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid rgba(102, 126, 234, 0.1);
+  border-radius: 12px;
   cursor: pointer;
-  font-size: 12px;
-  transition: all 0.2s;
+  font-size: 13px;
+  font-weight: 500;
+  transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   display: flex;
   align-items: center;
   gap: 6px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .workspace-tab:hover {
-  background: white;
-  transform: scale(1.05);
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  border-color: rgba(102, 126, 234, 0.2);
 }
 
 .workspace-tab.active {
-  background: #4CAF50;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  border-color: transparent;
 }
 
 .workspace-tab-close {
@@ -273,4 +362,71 @@ body {
   border: 1px solid #ddd;
   border-radius: 4px;
   object-fit: cover;
+}
+
+/* Loading States & Micro-interactions */
+.dock-item.loading {
+  animation: canana-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes canana-pulse {
+  0% {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    transform: scale(1.08);
+  }
+  50% {
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.6);
+    transform: scale(1.12);
+  }
+  100% {
+    box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    transform: scale(1.08);
+  }
+}
+
+.canana-loading-spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.3);
+  border-top: 3px solid #ffffff;
+  border-radius: 50%;
+  animation: canana-spinner 1s linear infinite;
+}
+
+@keyframes canana-spinner {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Enhanced Canvas Area */
+.canvas-wrapper {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.15), 
+              0 8px 32px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.canvas-wrapper.drag-over {
+  background: #f8faff;
+  box-shadow: 0 24px 80px rgba(102, 126, 234, 0.2), 
+              0 8px 32px rgba(102, 126, 234, 0.15);
+  border: 2px dashed rgba(102, 126, 234, 0.5);
+  transform: scale(1.02);
+}
+
+/* Enhanced Panels */
+.floating-panel {
+  position: fixed;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 
+              0 8px 24px rgba(0, 0, 0, 0.1);
+  z-index: 999;
+  min-width: 220px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }

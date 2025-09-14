@@ -35,6 +35,9 @@ function App() {
   const [contextMenu, setContextMenu] = useState(null);
   const [selectedObject, setSelectedObject] = useState(null);
   
+  // Drag and drop state
+  const [isDragOver, setIsDragOver] = useState(false);
+  
   // Workspace state
   const [workspaces, setWorkspaces] = useState([]);
   const [currentWorkspaceId, setCurrentWorkspaceId] = useState(null);
@@ -47,6 +50,13 @@ function App() {
       setCurrentWorkspaceId(workspaceManagerRef.current.currentWorkspaceId);
     }
   }, []);
+
+  // Update document title with Canana branding
+  useEffect(() => {
+    const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
+    const workspaceName = currentWorkspace?.name || 'Workspace';
+    document.title = `${workspaceName} - Canana | AI-Powered Digital Canvas`;
+  }, [workspaces, currentWorkspaceId]);
 
   // Initialize canvas (only once)
   useEffect(() => {
@@ -543,6 +553,94 @@ function App() {
     }
   }, []);
 
+  // Drag and drop handlers for image upload
+  const handleDragOver = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    e.dataTransfer.dropEffect = 'copy';
+  }, []);
+
+  const handleDragEnter = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  }, []);
+
+  const handleDragLeave = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    // Only set to false if leaving the canvas wrapper itself
+    if (e.currentTarget.contains(e.relatedTarget)) return;
+    setIsDragOver(false);
+  }, []);
+
+  const handleDrop = useCallback((e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    
+    const canvas = fabricCanvasRef.current;
+    if (!canvas) return;
+    
+    const files = Array.from(e.dataTransfer.files);
+    const imageFiles = files.filter(file => file.type.startsWith('image/'));
+    
+    if (imageFiles.length === 0) {
+      alert('Please drop image files only');
+      return;
+    }
+    
+    // Get drop position relative to canvas
+    const rect = canvasRef.current.getBoundingClientRect();
+    const dropX = e.clientX - rect.left;
+    const dropY = e.clientY - rect.top;
+    
+    // Convert to canvas coordinates
+    const pointer = canvas.getPointer(e);
+    
+    imageFiles.forEach((file, index) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        fabric.Image.fromURL(event.target.result, (img) => {
+          // Scale image if too large
+          const maxWidth = 400;
+          const maxHeight = 400;
+          
+          if (img.width > maxWidth || img.height > maxHeight) {
+            const scale = Math.min(maxWidth / img.width, maxHeight / img.height);
+            img.scale(scale);
+          }
+          
+          // Position image at drop location with slight offset for multiple images
+          img.set({
+            left: pointer.x + (index * 20),
+            top: pointer.y + (index * 20),
+            selectable: true,
+            evented: true
+          });
+          
+          canvas.add(img);
+          canvas.setActiveObject(img);
+          canvas.renderAll();
+          
+          // Save workspace after adding image
+          const workspace = workspaceManagerRef.current.getCurrentWorkspace();
+          if (workspace) {
+            const canvasData = canvas.toJSON();
+            const thumbnail = canvas.toDataURL({
+              format: 'png',
+              quality: 0.3,
+              multiplier: 0.1
+            });
+            workspaceManagerRef.current.updateWorkspaceData(canvasData, thumbnail);
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    });
+  }, []);
+
+
   const handleSwitchWorkspace = useCallback((workspaceId) => {
     if (!workspaceManagerRef.current || workspaceId === currentWorkspaceId) return;
     
@@ -749,6 +847,22 @@ function App() {
 
   return (
     <div className="app-container">
+      {/* Canana Header */}
+      <div className="canana-header">
+        <div className="canana-logo">
+          <span className="canana-icon">🎨</span>
+          <h1 className="canana-title">Canana</h1>
+          <span className="canana-subtitle">AI-Powered Digital Canvas</span>
+        </div>
+        <div className="canana-actions">
+          <div className="canana-workspace-info">
+            <span className="current-workspace">
+              {workspaces.find(w => w.id === currentWorkspaceId)?.name || 'Workspace'}
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* Workspace Tabs */}
       {workspaces.length > 0 && (
         <WorkspaceTabs
@@ -766,9 +880,13 @@ function App() {
       {/* Canvas */}
       <div className="canvas-container">
         <div 
-          className="canvas-wrapper"
+          className={`canvas-wrapper ${isDragOver ? 'drag-over' : ''}`}
           onContextMenu={handleCanvasContextMenu}
           onMouseDown={handleCanvasMouseDown}
+          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
         >
           <canvas ref={canvasRef} />
         </div>
@@ -1148,11 +1266,14 @@ function App() {
 
           {/* AI Generation */}
           <div 
-            className={`dock-item ${isAIGenerating ? 'active' : ''}`}
+            className={`dock-item ${isAIGenerating ? 'active loading' : ''}`}
             onClick={handleAIGenerate}
-            style={isAIGenerating ? { opacity: 0.6 } : {}}
           >
-            {isAIGenerating ? '⏳' : '🤖'}
+            {isAIGenerating ? (
+              <div className="canana-loading-spinner"></div>
+            ) : (
+              '🤖'
+            )}
             <span className="dock-tooltip">
               {isAIGenerating ? 'AI Generating...' : 'AI Generate'}
             </span>
