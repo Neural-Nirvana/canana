@@ -137,7 +137,7 @@ Perfect for: Collages, concept visualization, creative compositing
 ### **Installation & Setup**
 ```bash
 # Clone the repository
-git clone https://github.com/your-username/canana.git
+git clone https://github.com/Neural-Nirvana/canana.git
 cd canana
 
 # Install dependencies
@@ -275,7 +275,7 @@ Help us advance visual prompting technology for Nano Banana and future AI models
 ### **Setup for Contributors**
 ```bash
 # Fork and clone the repository
-git clone https://github.com/your-username/canana.git
+git clone https://github.com/Neural-Nirvana/canana.git
 
 # Create feature branch
 git checkout -b feature/visual-prompting-enhancement
@@ -336,9 +336,9 @@ MIT License - see [LICENSE](LICENSE) file for full terms.
 
 ## 📞 **Support & Resources**
 
-- **Issues**: [GitHub Issues](https://github.com/your-username/canana/issues)
-- **Documentation**: [Wiki](https://github.com/your-username/canana/wiki) 
-- **Discussions**: [GitHub Discussions](https://github.com/your-username/canana/discussions)
+- **Issues**: [GitHub Issues](https://github.com/Neural-Nirvana/canana/issues)
+- **Documentation**: [Wiki](https://github.com/Neural-Nirvana/canana/wiki) 
+- **Discussions**: [GitHub Discussions](https://github.com/Neural-Nirvana/canana/discussions)
 - **API Keys**: [Google AI Studio](https://makersuite.google.com/app/apikey)
 - **Nano Banana Documentation**: [Google AI Developer Docs](https://ai.google.dev/gemini-api/docs/image-generation)
 
