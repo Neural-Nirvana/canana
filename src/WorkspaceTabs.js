@@ -17,8 +17,20 @@ function WorkspaceTabs({
     }
   };
 
-  // Show only first 3 workspaces in tabs, rest in panel
-  const visibleWorkspaces = workspaces.slice(0, 3);
+  // Show current workspace + 2 most recent others, ensuring current is always visible
+  const currentWorkspace = workspaces.find(w => w.id === currentWorkspaceId);
+  const otherWorkspaces = workspaces
+    .filter(w => w.id !== currentWorkspaceId)
+    .sort((a, b) => b.updatedAt - a.updatedAt); // Most recent first
+  
+  let visibleWorkspaces = [];
+  if (currentWorkspace) {
+    visibleWorkspaces.push(currentWorkspace);
+    visibleWorkspaces.push(...otherWorkspaces.slice(0, 2));
+  } else {
+    visibleWorkspaces = workspaces.slice(0, 3);
+  }
+  
   const hasMore = workspaces.length > 3;
 
   return (
@@ -55,7 +67,7 @@ function WorkspaceTabs({
             onClick={() => setShowPanel(!showPanel)}
             style={{ background: showPanel ? '#f0f0f0' : undefined }}
           >
-            <span>More ({workspaces.length - 3})</span>
+            <span>More ({workspaces.length - visibleWorkspaces.length})</span>
           </div>
         )}
         
