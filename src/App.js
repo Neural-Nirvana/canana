@@ -11,7 +11,10 @@ function App() {
   const fileInputRef = useRef(null);
   const workspaceManagerRef = useRef(null);
   const dockRef = useRef(null);
-  
+
+  // Mobile detection
+  const isMobile = window.innerWidth <= 768;
+
   const [isDrawing, setIsDrawing] = useState(false);
   const [brushSize, setBrushSize] = useState(5);
   const [brushColor, setBrushColor] = useState('#000000');
@@ -115,7 +118,6 @@ function App() {
     if (!canvasRef.current || fabricCanvasRef.current) return;
     
     // Create Fabric.js canvas - responsive with mobile optimizations
-    const isMobile = window.innerWidth <= 768;
     const canvas = new fabric.Canvas(canvasRef.current, {
       width: window.innerWidth - (isMobile ? 24 : 40),
       height: window.innerHeight - (isMobile ? 160 : 120), // More space for mobile dock and header
@@ -149,25 +151,79 @@ function App() {
     canvas.on('object:modified', saveWorkspace);
     canvas.on('object:removed', saveWorkspace);
 
-    // Handle text editing events - simpler approach
+    // Handle text editing events - improved approach
     canvas.on('text:editing:entered', (options) => {
       const textObject = options.target;
-      if (textObject.isPlaceholder && textObject.text === 'Text goes here') {
+      if (textObject.isPlaceholder && textObject.text === textObject.placeholderText) {
         textObject.text = '';
         textObject.isPlaceholder = false;
         canvas.renderAll();
+      }
+
+      // Single focus call with proper cursor positioning
+      const textInput = textObject.hiddenTextarea;
+      if (textInput) {
+        // Use setTimeout to ensure DOM is ready
+        setTimeout(() => {
+          textInput.focus();
+
+          // Check if this is a new text object (empty) or existing text
+          const textLength = textInput.value.length;
+          if (textLength === 0) {
+            // New text: cursor at beginning
+            textInput.setSelectionRange(0, 0);
+          } else {
+            // Existing text: cursor at end (unless user clicked at specific position)
+            textInput.setSelectionRange(textLength, textLength);
+          }
+
+          // Prevent cursor jumping on mobile by ensuring proper positioning
+          if (isMobile) {
+            setTimeout(() => {
+              if (textLength === 0) {
+                textInput.setSelectionRange(0, 0);
+              } else {
+                textInput.setSelectionRange(textLength, textLength);
+              }
+            }, 50);
+          }
+        }, 10);
+      }
+    });
+
+    // Handle mouse down on text objects for better cursor positioning
+    canvas.on('mouse:down', (options) => {
+      const target = options.target;
+      if (target && target.type === 'textbox' && target.isEditing) {
+        // Let Fabric.js handle the cursor positioning naturally
+        // This prevents our setSelectionRange from interfering with user clicks
+        const textInput = target.hiddenTextarea;
+        if (textInput) {
+          // Small delay to let Fabric.js position cursor first
+          setTimeout(() => {
+            // Only adjust if cursor is at wrong position (e.g., at end when it should be elsewhere)
+            const currentPos = textInput.selectionStart;
+            const textLength = textInput.value.length;
+            if (currentPos === textLength && textLength > 0) {
+              // Cursor is at end, which is usually correct for editing existing text
+              return;
+            }
+          }, 5);
+        }
       }
     });
 
     canvas.on('text:editing:exited', (options) => {
       const textObject = options.target;
-      
+
       // If text is empty, restore placeholder
       if (!textObject.text.trim()) {
-        textObject.text = 'Text goes here';
+        textObject.text = textObject.placeholderText || 'Text goes here';
         textObject.isPlaceholder = true;
+      } else {
+        textObject.isPlaceholder = false;
       }
-      
+
       canvas.renderAll();
     });
 
@@ -187,15 +243,17 @@ function App() {
     if (isMobile) {
       // Prevent default touch behaviors that interfere with drawing
       canvas.upperCanvasEl.addEventListener('touchstart', (e) => {
-        // Allow single touch for drawing, prevent multi-touch zoom
-        if (e.touches.length === 1) {
+        // Allow single touch for drawing, but don't prevent for text editing
+        const activeObject = canvas.getActiveObject();
+        if (e.touches.length === 1 && !activeObject?.isEditing) {
           e.preventDefault();
         }
       }, { passive: false });
-      
+
       canvas.upperCanvasEl.addEventListener('touchmove', (e) => {
-        // Prevent scroll while drawing
-        if (e.touches.length === 1 && canvas.isDrawingMode) {
+        // Prevent scroll while drawing, but allow for text editing
+        const activeObject = canvas.getActiveObject();
+        if (e.touches.length === 1 && canvas.isDrawingMode && !activeObject?.isEditing) {
           e.preventDefault();
         }
       }, { passive: false });
@@ -364,10 +422,19 @@ function App() {
             e.preventDefault();
             toggleDrawing();
             break;
-          case 't':
-            e.preventDefault();
-            addText();
-            break;
+           case 't':
+             e.preventDefault();
+             addText();
+             break;
+           case 'enter':
+             e.preventDefault();
+             // Exit text editing mode when Enter is pressed
+             const activeObject = canvas.getActiveObject();
+             if (activeObject && activeObject.isEditing) {
+               activeObject.exitEditing();
+               canvas.renderAll();
+             }
+             break;
           case 'r':
             e.preventDefault();
             addRectangle();
@@ -461,7 +528,7 @@ function App() {
     if (!canvas) return;
 
     // Use Textbox for better text handling - auto-sizes to content
-    const fabricText = new fabric.Textbox('Text goes here', {
+    const fabricText = new fabric.Textbox('', {
       left: 100,
       top: 100,
       fontSize: 24,
@@ -489,18 +556,40 @@ function App() {
     // Add custom properties for text editing
     fabricText.isPlaceholder = true;
     fabricText.originalText = 'Text goes here';
+    fabricText.placeholderText = 'Text goes here';
 
     // Add the text to canvas
     canvas.add(fabricText);
     canvas.setActiveObject(fabricText);
-    
-    // Immediately enter edit mode for better UX
-    setTimeout(() => {
-      fabricText.enterEditing();
-      fabricText.selectAll();
-    }, 100);
 
-    canvas.renderAll();
+    // Use requestAnimationFrame for more reliable timing
+    requestAnimationFrame(() => {
+      canvas.renderAll();
+
+      // Enter edit mode after render with improved reliability
+      const enterEditMode = () => {
+        try {
+          fabricText.enterEditing();
+
+          // Single focus call with proper cursor positioning
+          const textInput = fabricText.hiddenTextarea;
+          if (textInput) {
+            // Use setTimeout to ensure DOM is ready
+            setTimeout(() => {
+              textInput.focus();
+              // Position cursor at the end for new text
+              textInput.setSelectionRange(0, 0);
+            }, 10);
+          }
+        } catch (error) {
+          console.warn('Text editing initialization failed, retrying...', error);
+          // Retry once more
+          setTimeout(enterEditMode, 100);
+        }
+      };
+
+      setTimeout(enterEditMode, 50);
+    });
   };
 
   // Add rectangle with customization
